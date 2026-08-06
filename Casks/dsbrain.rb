@@ -7,7 +7,7 @@ cask "dsbrain" do
   desc "Menu bar controller for local ds4-server"
   homepage "https://github.com/derkan/dsbrain"
 
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
   depends_on arch: :arm64
 
   app "DSBrain.app"

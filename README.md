@@ -63,8 +63,11 @@ Fan monitoring, rules, and command preview:
 
 ```bash
 brew tap derkan/dsbrain https://github.com/derkan/dsbrain
+brew trust derkan/dsbrain
 brew install --cask dsbrain
 ```
+
+Homebrew requires trusting third-party taps before loading their casks.
 
 The cask is unsigned. If Gatekeeper blocks the app: right-click → **Open**, or `xattr -cr /Applications/DSBrain.app`.
 

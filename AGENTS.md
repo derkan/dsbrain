@@ -235,7 +235,7 @@ writes invoke the helper. Manual fan control can affect thermals — use at your
   stamps plist from the tag, uploads the zip, creates the release, then
   bumps `Casks/dsbrain.rb` (`version` + `sha256`) on `main`.
 - Homebrew (personal tap):
-  `brew tap derkan/dsbrain https://github.com/derkan/dsbrain && brew install --cask dsbrain`
+  `brew tap derkan/dsbrain https://github.com/derkan/dsbrain && brew trust derkan/dsbrain && brew install --cask dsbrain`
 
 ## Out of scope
 
