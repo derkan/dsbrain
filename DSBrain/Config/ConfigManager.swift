@@ -35,6 +35,11 @@ final class ConfigManager {
         do {
             let yaml = try YAMLEncoder().encode(config)
             try yaml.write(to: configPath, atomically: true, encoding: .utf8)
+            // Ensure the write is what we will read back (catch silent encode quirks).
+            let roundTrip = try YAMLDecoder().decode(AppConfig.self, from: yaml)
+            if roundTrip.server.launchCommand != config.server.launchCommand {
+                print("Config save warning: launch_command round-trip mismatch")
+            }
         } catch {
             print("Config save error: \(error)")
         }

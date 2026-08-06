@@ -91,8 +91,7 @@ final class ServerManager: ObservableObject {
         }
 
         guard let cwd = LaunchCommand.workingDirectory(from: command) else {
-            errorMessage =
-                "Launch command must start with an absolute path to ds4-server (relative paths like ./eko.sh are not supported)."
+            errorMessage = LaunchCommand.workingDirectoryError(for: command)
             return
         }
         launchOwnedProcess(config: config, command: command, workingDirectory: cwd)

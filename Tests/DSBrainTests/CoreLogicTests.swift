@@ -176,8 +176,25 @@ final class LaunchCommandTests: XCTestCase {
 
     func testRelativeBinaryHasNoWorkingDirectory() {
         XCTAssertNil(LaunchCommand.workingDirectory(from: "./eko.sh --metal"))
-        XCTAssertNil(LaunchCommand.workingDirectory(from: "ds4-server --port 8080"))
+        XCTAssertNil(LaunchCommand.workingDirectory(from: "subdir/ds4-server --port 8080"))
         XCTAssertNil(LaunchCommand.workingDirectory(from: "cd /data/AI/ds4 && ./ds4-server"))
+    }
+
+    func testPATHBinaryResolvesWorkingDirectory() {
+        // `bash` is always on a login PATH; cwd is its parent directory.
+        let cwd = LaunchCommand.workingDirectory(from: "bash --help")
+        XCTAssertNotNil(cwd)
+        XCTAssertTrue(cwd == "/bin" || cwd == "/usr/bin", "unexpected cwd: \(cwd ?? "nil")")
+        XCTAssertNotNil(LaunchCommand.resolveOnPATH("bash"))
+    }
+
+    func testWorkingDirectoryErrorMessages() {
+        XCTAssertTrue(
+            LaunchCommand.workingDirectoryError(for: "./eko.sh").contains("relative path")
+        )
+        XCTAssertTrue(
+            LaunchCommand.workingDirectoryError(for: "definitely-not-a-real-dsbrain-bin-xyz").contains("PATH")
+        )
     }
 
     func testQuotedAbsoluteBinaryWithSpaces() {

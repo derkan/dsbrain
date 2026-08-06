@@ -44,7 +44,7 @@ Fan monitoring, rules, and command preview:
 
 ## Features
 
-- Launch `ds4-server` via a configurable absolute-path command (`bash -lc`)
+- Launch `ds4-server` via a configurable command (`bash -lc`; PATH name or absolute path)
 - Adopt an already-running `ds4-server` on the configured `--host` / `--port`
 - Status bar: activity badge, GPU/MEM mini-bars, P/T speeds, context (`C:`), SSD cache hit (`S:`), fan RPM / GPU temp
 - Popover: Projects, Fans, Activity, Server Log, Start / Restart / Quit
@@ -81,7 +81,7 @@ make run-release  # release build + launch
 ```
 
 1. Click the status item → **Preferences…**
-2. Set `launch_command` to your absolute `ds4-server` path and flags (must start with `/…/ds4-server`)
+2. Set `launch_command` (`ds4-server` on PATH, or an absolute path) and flags; include `--host` / `--port`
 3. **Save & Restart**
 
 ## Makefile
@@ -128,7 +128,7 @@ Created at `~/Library/Application Support/DSBrain/config.yaml` on first launch:
 ```yaml
 server:
   launch_command: |
-    /path/to/ds4/ds4-server
+    ds4-server
       --model /path/to/ds4/ds4flash.gguf
       --metal
       --ssd-streaming

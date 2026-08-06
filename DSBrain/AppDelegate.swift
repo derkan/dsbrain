@@ -18,6 +18,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
     }
 
     public func applicationDidFinishLaunching(_ notification: Notification) {
+        setupMainMenu()
         setupStatusBar()
         loadConfigAndStart()
         fanController.start()
@@ -135,6 +136,40 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
         serverManager.restart(with: config)
     }
 
+    /// LSUIElement apps have no Edit menu by default, so Cmd+C/X/V/A do nothing
+    /// in Preferences text fields until standard Edit actions are wired.
+    private func setupMainMenu() {
+        let mainMenu = NSMenu()
+
+        let appItem = NSMenuItem()
+        mainMenu.addItem(appItem)
+        let appMenu = NSMenu()
+        appItem.submenu = appMenu
+        appMenu.addItem(withTitle: "About DSBrain", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(NSMenuItem.separator())
+        appMenu.addItem(withTitle: "Preferences…", action: #selector(openPreferencesMenu(_:)), keyEquivalent: ",")
+        appMenu.addItem(NSMenuItem.separator())
+        appMenu.addItem(withTitle: "Quit DSBrain", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+
+        let editItem = NSMenuItem()
+        mainMenu.addItem(editItem)
+        let editMenu = NSMenu(title: "Edit")
+        editItem.submenu = editMenu
+        editMenu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        editMenu.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        editMenu.addItem(NSMenuItem.separator())
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+
+        NSApp.mainMenu = mainMenu
+    }
+
+    @objc private func openPreferencesMenu(_ sender: Any?) {
+        showPreferences()
+    }
+
     private func quitApp() {
         closePopover()
         NSApplication.shared.terminate(nil)
@@ -150,7 +185,20 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
     }
 
     private func presentPreferencesWindow() {
-        if let existing = preferencesWindow, existing.isVisible {
+        let rootView = PreferencesView(
+            fanController: fanController,
+            onSaveAndRestart: { [weak self] config in
+                self?.statusBarModel.reloadTrayConfig()
+                self?.fanController.reloadConfig()
+                self?.fanController.start()
+                self?.serverManager.restart(with: config)
+            }
+        )
+
+        if let existing = preferencesWindow {
+            // Always rebuild content so launch command / other fields reload from disk
+            // (reusing a closed window kept a stale @StateObject).
+            existing.contentView = NSHostingView(rootView: rootView)
             existing.makeKeyAndOrderFront(nil)
             return
         }
@@ -164,15 +212,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
         window.title = "DSBrain Preferences"
         window.center()
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: PreferencesView(
-            fanController: fanController,
-            onSaveAndRestart: { [weak self] config in
-                self?.statusBarModel.reloadTrayConfig()
-                self?.fanController.reloadConfig()
-                self?.fanController.start()
-                self?.serverManager.restart(with: config)
-            }
-        ))
+        window.contentView = NSHostingView(rootView: rootView)
         window.makeKeyAndOrderFront(nil)
         preferencesWindow = window
     }

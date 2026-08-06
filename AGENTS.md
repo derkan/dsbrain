@@ -73,11 +73,11 @@ There is no `.xcodeproj` in-tree. Open `Package.swift` or run `make xcode`.
 ### Server lifecycle
 
 - `ServerManager` spawns the configured launch command via `bash -lc`.
-- Cwd is the directory of the absolute-path binary (so relative Metal sources like
-  `metal/flash_attn.metal` resolve); no separate working-directory preference.
-  Relative binaries (`./eko.sh`, `ds4-server`) are rejected with a clear error.
-- Default launch command: absolute `/path/to/ds4/ds4-server …` with typical flags,
-  including `--host` / `--port` (edit in Preferences before first real start).
+- Cwd is the directory of the binary: absolute first token, or a PATH name
+  (`ds4-server`) resolved with `bash -lc 'command -v …'`. Relative paths
+  (`./eko.sh`) are rejected with a clear error.
+- Default launch command: `ds4-server …` with typical flags, including
+  `--host` / `--port` (edit model path in Preferences before first real start).
 - Host/port for adopt detection and HTTP metrics are parsed from `--host` / `--port`
   in the launch command (defaults `127.0.0.1` / `8080` if missing).
 - If `ds4-server` is already listening on that host/port, the app **adopts**
@@ -141,7 +141,7 @@ Path: `~/Library/Application Support/DSBrain/config.yaml`
 ```yaml
 server:
   launch_command: |
-    /path/to/ds4/ds4-server
+    ds4-server
       --model /path/to/ds4/ds4flash.gguf
       --metal
       --ssd-streaming
@@ -187,9 +187,9 @@ fans:
 Notes:
 
 - `launch_command` is run via `bash -lc` after newlines (and optional `\`
-  continuations) are flattened to spaces; first token must be an absolute binary
-  path and the command should include `--host` / `--port`.
-- Cwd is derived from the binary path (needed for relative Metal shader sources).
+  continuations) are flattened to spaces; first token is an absolute binary
+  path or a PATH name (`ds4-server`); include `--host` / `--port`.
+- Cwd is derived from the resolved binary path (needed for relative Metal shader sources).
 - Adopt detection uses host/port parsed from those flags.
 - Preferences (⌘, from popover) edits the same schema and restarts the server
   (Restart kills adopted; Quit/Stop do not).

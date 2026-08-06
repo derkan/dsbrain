@@ -29,12 +29,15 @@ struct PreferencesView: View {
                 Spacer()
 
                 Button("Cancel") {
+                    NSApp.keyWindow?.makeFirstResponder(nil)
                     NSApp.keyWindow?.close()
                 }
                 .controlSize(.small)
                 .keyboardShortcut(.cancelAction)
 
                 Button("Save & Restart") {
+                    // Commit any in-progress text editing before reading view model.
+                    NSApp.keyWindow?.makeFirstResponder(nil)
                     let config = viewModel.save()
                     onSaveAndRestart?(config)
                     NSApp.keyWindow?.close()
@@ -56,14 +59,13 @@ struct PreferencesView: View {
                 Text("Launch command")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                TextEditor(text: $viewModel.launchCommand)
-                    .font(.system(.body, design: .monospaced))
+                MultilineTextEditor(text: $viewModel.launchCommand)
                     .frame(minHeight: 120, maxHeight: 200)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
                     )
-                Text("One flag per line is fine (no trailing \\). Absolute binary path sets cwd. Include --host / --port.")
+                Text("One flag per line is fine (no trailing \\). Use `ds4-server` (PATH) or an absolute binary path — that sets cwd. Include --host / --port.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                 Text("Adopt endpoint: \(viewModel.parsedEndpoint)")
