@@ -239,6 +239,35 @@ final class ListeningPortParseTests: XCTestCase {
     }
 }
 
+final class DS4InstanceLockTests: XCTestCase {
+    func testPathHonorsEnvOverride() {
+        XCTAssertEqual(DS4InstanceLock.path(environment: [:]), "/tmp/ds4.lock")
+        XCTAssertEqual(
+            DS4InstanceLock.path(environment: ["DS4_LOCK_FILE": "/var/tmp/custom.lock"]),
+            "/var/tmp/custom.lock"
+        )
+        XCTAssertEqual(
+            DS4InstanceLock.path(environment: ["DS4_LOCK_FILE": "  "]),
+            "/tmp/ds4.lock"
+        )
+    }
+
+    func testParseOwnerPID() {
+        XCTAssertEqual(DS4InstanceLock.parseOwnerPID(from: "41017\n"), 41017)
+        XCTAssertEqual(DS4InstanceLock.parseOwnerPID(from: "  99  "), 99)
+        XCTAssertNil(DS4InstanceLock.parseOwnerPID(from: ""))
+        XCTAssertNil(DS4InstanceLock.parseOwnerPID(from: "0"))
+        XCTAssertNil(DS4InstanceLock.parseOwnerPID(from: "abc"))
+    }
+
+    func testConflictPIDFromLogLine() {
+        let line = "ds4: another ds4 process is already running (pid 41017); refusing to start"
+        XCTAssertEqual(DS4InstanceLock.conflictPID(from: line), 41017)
+        XCTAssertNil(DS4InstanceLock.conflictPID(from: "ds4: another ds4 process is already running; refusing to start"))
+        XCTAssertNil(DS4InstanceLock.conflictPID(from: "ds4-server: listening on http://127.0.0.1:8080"))
+    }
+}
+
 final class ContextFillParseTests: XCTestCase {
     private let parser = LogParser()
 

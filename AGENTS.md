@@ -84,6 +84,10 @@ There is no `.xcodeproj` in-tree. Open `Package.swift` or run `make xcode`.
   in the launch command (defaults `127.0.0.1` / `8080` if missing).
 - If `ds4-server` is already listening on that host/port, the app **adopts**
   that instance instead of spawning a second process.
+- Else if `/tmp/ds4.lock` (or `DS4_LOCK_FILE`) names a live `ds4-server` PID,
+  adopt that too — the lock is taken before HTTP bind (model load) and can
+  outlive a brief port gap on shutdown. A spawn that hits
+  `another ds4 process is already running` also recovers by attaching.
 - Port held by a non-`ds4-server` process: start aborts with a clear error.
 - Restart (popover / Save & Restart): SIGTERM/SIGKILL owned **or adopted**, then start.
 - Quit / stop owned server: SIGTERM, then SIGKILL after ~3s if still alive.

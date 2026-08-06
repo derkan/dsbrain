@@ -68,18 +68,37 @@ final class ServerManager: ObservableObject {
         let port = serverPort
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let occupants = ListeningPort.listeners(on: port, host: host)
+            // Lock is held before HTTP bind; cover model-load and shutdown races.
+            let lockOwner = occupants.contains(where: \.isDS4Server)
+                ? nil
+                : DS4InstanceLock.liveOwner()
             DispatchQueue.main.async {
-                self?.finishStart(config: config, command: command, occupants: occupants)
+                self?.finishStart(
+                    config: config,
+                    command: command,
+                    occupants: occupants,
+                    lockOwner: lockOwner
+                )
             }
         }
     }
 
-    private func finishStart(config: AppConfig, command: String, occupants: [ListeningProcess]) {
+    private func finishStart(
+        config: AppConfig,
+        command: String,
+        occupants: [ListeningProcess],
+        lockOwner: ListeningProcess?
+    ) {
         isStarting = false
         guard !isRunning else { return }
 
         if let existing = occupants.first(where: \.isDS4Server) {
-            adoptExistingServer(process: existing)
+            adoptExistingServer(process: existing, assumeLoading: false)
+            return
+        }
+
+        if let lockOwner {
+            adoptExistingServer(process: lockOwner, assumeLoading: true)
             return
         }
 
@@ -178,20 +197,21 @@ final class ServerManager: ObservableObject {
 
     // MARK: - Private
 
-    private func adoptExistingServer(process existing: ListeningProcess) {
+    private func adoptExistingServer(process existing: ListeningProcess, assumeLoading: Bool) {
         adoptedPID = existing.pid
         isAdopted = true
         self.process = nil
         clearPipes()
         startTime = Date()
         isRunning = true
-        isLoadingModel = false
+        isLoadingModel = assumeLoading
         isRequestBusy = false
         errorMessage = nil
         activityTracker.resetForStop()
         resetSpeedWindows()
 
-        appendLog("Attached to existing ds4-server (pid \(existing.pid)) — live stdout unavailable")
+        let via = assumeLoading ? "instance lock" : "port \(serverPort)"
+        appendLog("Attached to existing ds4-server (pid \(existing.pid), via \(via)) — live stdout unavailable")
 
         if let logPath = Self.discoverLogFile(from: existing.command) {
             appendLog("Tailing log file: \(logPath)")
@@ -288,8 +308,8 @@ final class ServerManager: ObservableObject {
     }
 
     private func handleTermination(of proc: Process) {
-        // Ignore stale handlers after a replacement process was launched.
-        if let current = process, current !== proc { return }
+        // Ignore after stop/replace/adopt cleared or swapped `process`.
+        guard process === proc else { return }
 
         clearPipes()
         process = nil
@@ -459,6 +479,11 @@ final class ServerManager: ObservableObject {
                     return
                 }
 
+                if let conflictPID = DS4InstanceLock.conflictPID(from: line) {
+                    self.handleInstanceLockConflict(pid: conflictPID)
+                    return
+                }
+
                 self.ingestLogLine(line, fromFile: false)
 
                 if let message = Self.errorMessage(from: line) {
@@ -483,12 +508,20 @@ final class ServerManager: ObservableObject {
         let finish: () -> Void = { [weak self] in
             DispatchQueue.global(qos: .userInitiated).async {
                 let occupants = ListeningPort.listeners(on: port, host: host)
+                let lockOwner = occupants.contains(where: \.isDS4Server)
+                    ? nil
+                    : DS4InstanceLock.liveOwner()
                 DispatchQueue.main.async {
                     guard let self else { return }
                     self.bindRecoveryInProgress = false
                     if let existing = occupants.first(where: \.isDS4Server) {
                         self.errorMessage = nil
-                        self.adoptExistingServer(process: existing)
+                        self.adoptExistingServer(process: existing, assumeLoading: false)
+                        return
+                    }
+                    if let lockOwner {
+                        self.errorMessage = nil
+                        self.adoptExistingServer(process: lockOwner, assumeLoading: true)
                         return
                     }
                     if !occupants.isEmpty {
@@ -503,6 +536,45 @@ final class ServerManager: ObservableObject {
             proc.gracefulTerminate(timeout: 2.0, completion: finish)
         } else {
             finish()
+        }
+    }
+
+    /// Spawn lost the ds4 flock; attach to the owner instead of surfacing a hard error.
+    private func handleInstanceLockConflict(pid: pid_t) {
+        guard !isAdopted else { return }
+
+        intentionalStop = true
+        let proc = process
+        process = nil
+        clearPipes()
+        markStopped()
+
+        if let proc, proc.isRunning {
+            proc.terminate()
+        }
+
+        let host = serverHost
+        let port = serverPort
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let fromPID = ListeningPort.ds4Process(pid: pid, forceDS4: true)
+            let occupants = ListeningPort.listeners(on: port, host: host)
+            let existing = fromPID
+                ?? occupants.first(where: \.isDS4Server)
+                ?? DS4InstanceLock.liveOwner()
+            let loading = existing.map { proc in
+                !occupants.contains(where: { $0.pid == proc.pid })
+            } ?? true
+
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if let existing {
+                    self.errorMessage = nil
+                    self.adoptExistingServer(process: existing, assumeLoading: loading)
+                } else {
+                    self.errorMessage =
+                        "ds4-server already running (pid \(pid)) but could not attach."
+                }
+            }
         }
     }
 

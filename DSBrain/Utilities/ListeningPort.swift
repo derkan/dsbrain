@@ -37,6 +37,22 @@ enum ListeningPort {
         return results
     }
 
+    /// Live process for `pid` when its command line looks like ds4-server.
+    /// - Parameter forceDS4: When true (lock-conflict recovery), trust the PID even if
+    ///   `ps` args are empty or unusual — the flock owner is always a ds4 binary.
+    static func ds4Process(pid: pid_t, forceDS4: Bool = false) -> ListeningProcess? {
+        guard pid > 1, kill(pid, 0) == 0 else { return nil }
+        let command = commandLine(for: pid, lsofCommand: forceDS4 ? "ds4-server" : "")
+        let named = isDS4Server(command: command, lsofCommand: forceDS4 ? "ds4-server" : "")
+        guard forceDS4 || named else { return nil }
+        return ListeningProcess(
+            pid: pid,
+            command: command.isEmpty ? "ds4-server" : command,
+            listenAddress: "",
+            isDS4Server: true
+        )
+    }
+
     private static func runLsof(arguments: [String]) -> String {
         runCommand(executable: "/usr/sbin/lsof", arguments: arguments, requireSuccess: false) ?? ""
     }

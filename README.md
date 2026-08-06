@@ -46,6 +46,7 @@ Fan monitoring, rules, and command preview:
 
 - Launch `ds4-server` via a configurable command (`bash -lc`; PATH name or absolute path)
 - Adopt an already-running `ds4-server` on the configured `--host` / `--port`
+  (or via `/tmp/ds4.lock` when the port is not bound yet)
 - Status bar: activity badge, GPU/MEM mini-bars, P/T speeds, context (`C:`), SSD cache hit (`S:`), fan RPM / GPU temp
 - Popover: Projects, Fans, Activity, Server Log, Start / Restart / Quit
 - Projects: pin folders and open with [Pi](https://github.com/badlogic/pi-mono), [OMP](https://github.com/can1357/oh-my-pi) (`omp`), Codex CLI, or Cursor against the local OpenAI-compatible endpoint
