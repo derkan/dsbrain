@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Xcode / SwiftPM
+.build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.xcuserstate
+.swiftpm/
+
+# App bundle (built by Makefile)
+DSBrain.app/
+
+# Secrets / local
+*.pem
+.env
+.env.*
+.pi-subagents/
+
+# Editor
+*.swp
+*~
+.idea/
+.vscode/
