@@ -78,6 +78,7 @@ make run-release  # release build + launch
 make build / build-debug
 make bundle / bundle-debug / bundle-release
 make run / run-release
+make release          # release .app + DSBrain-<ver>-macos-arm64.zip
 make test
 make clean
 make resolve
@@ -86,6 +87,24 @@ make icons
 make format
 make lint
 make help
+```
+
+## Releases
+
+Push a semver tag to cut a GitHub Release (Apple Silicon zip attached):
+
+```bash
+# bump CFBundleShortVersionString in DSBrain/Info.plist first
+git tag -a v1.0.0 -m "v1.0.0"
+git push origin v1.0.0
+```
+
+Local artifact only: `make release` (or `make release VERSION=1.0.0`).
+
+The release zip is unsigned. After moving `DSBrain.app` to Applications, if Gatekeeper blocks it: right-click → **Open**, or:
+
+```bash
+xattr -cr /Applications/DSBrain.app
 ```
 
 ## Config

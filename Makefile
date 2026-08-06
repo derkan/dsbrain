@@ -1,13 +1,15 @@
-.PHONY: build run clean xcode resolve format lint icons run-xcode test help
+.PHONY: build build-debug build-release bundle bundle-debug bundle-release run run-release release clean xcode resolve format lint icons run-xcode test help
 
 SWIFT := swift
 CONFIG ?= debug
-BUILD_DIR := .build/arm64-apple-macosx/$(CONFIG)
+BUILD_DIR = .build/arm64-apple-macosx/$(CONFIG)
 APP_BUNDLE := DSBrain.app
 APP_PATH := $(APP_BUNDLE)/Contents/MacOS/DSBrain
 HELPER_PATH := $(APP_BUNDLE)/Contents/MacOS/smc-helper
 PLIST_PATH := $(APP_BUNDLE)/Contents/Info.plist
 ICONS_DIR := $(APP_BUNDLE)/Contents/Resources
+VERSION ?= $(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' DSBrain/Info.plist)
+RELEASE_ZIP = DSBrain-$(VERSION)-macos-arm64.zip
 
 build:
 	$(SWIFT) build -c release --product DSBrain
@@ -22,25 +24,31 @@ build-debug:
 test:
 	$(SWIFT) test --filter DSBrainTests
 
-bundle: build-$(CONFIG)
-	@echo "Creating .app bundle..."
+# $(1) = debug | release — explicit so we never ship a debug binary as "release".
+define BUNDLE_CMD
+	@echo "Creating .app bundle ($(1))..."
 	@rm -rf $(APP_BUNDLE)
 	@mkdir -p $(APP_BUNDLE)/Contents/MacOS
 	@mkdir -p $(ICONS_DIR)
-	@cp "$(BUILD_DIR)/DSBrain" $(APP_PATH)
+	@cp ".build/arm64-apple-macosx/$(1)/DSBrain" $(APP_PATH)
 	@chmod +x $(APP_PATH)
-	@cp "$(BUILD_DIR)/smc-helper" $(HELPER_PATH)
+	@cp ".build/arm64-apple-macosx/$(1)/smc-helper" $(HELPER_PATH)
 	@chmod +x $(HELPER_PATH)
 	@cp DSBrain/Info.plist $(APP_BUNDLE)/Contents/
 	@cp -R DSBrain/Assets.xcassets $(ICONS_DIR)/
 	@cp DSBrain/AppIcon.icns $(ICONS_DIR)/AppIcon.icns
 	@echo "Bundle ready: $(APP_BUNDLE)"
+endef
 
-bundle-debug: CONFIG = debug
-bundle-debug: bundle
+bundle-debug: build-debug
+	$(call BUNDLE_CMD,debug)
 
-bundle-release: CONFIG = release
-bundle-release: bundle
+bundle-release: build-release
+	$(call BUNDLE_CMD,release)
+
+# Default `make bundle` follows CONFIG (debug unless overridden).
+bundle:
+	@$(MAKE) --no-print-directory bundle-$(CONFIG)
 
 run: bundle-debug
 	@echo ""
@@ -52,9 +60,17 @@ run-release: bundle-release
 	@echo "Launching DSBrain (release)..."
 	@open $(APP_BUNDLE)
 
+# Release zip: DSBrain-<version>-macos-arm64.zip (VERSION from Info.plist or override)
+release: bundle-release
+	@test -n "$(VERSION)" || { echo "VERSION is empty"; exit 1; }
+	@rm -f "$(RELEASE_ZIP)"
+	ditto -c -k --keepParent "$(APP_BUNDLE)" "$(RELEASE_ZIP)"
+	@echo "Release artifact: $(RELEASE_ZIP)"
+
 clean:
 	$(SWIFT) package clean
 	@rm -rf $(APP_BUNDLE)
+	@rm -f DSBrain-*-macos-arm64.zip
 
 resolve:
 	$(SWIFT) package resolve

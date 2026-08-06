@@ -15,6 +15,7 @@ xcuserdata/
 
 # App bundle (built by Makefile)
 DSBrain.app/
+DSBrain-*-macos-arm64.zip
 
 # Secrets / local
 *.pem

@@ -225,9 +225,17 @@ writes invoke the helper. Manual fan control can affect thermals — use at your
 
 ---
 
+## Releases
+
+- Version string lives in `DSBrain/Info.plist` (`CFBundleShortVersionString`).
+- Local zip: `make release` → `DSBrain-<ver>-macos-arm64.zip`.
+- GitHub: push tag `v*` → `.github/workflows/release.yml` runs tests,
+  stamps plist from the tag, uploads the zip, creates the release.
+
 ## Out of scope
 
 - Hugging Face model browser / GGUF discovery
 - Chat / multi-turn UI
 - Global hotkeys
 - Windows / Linux
+- Code signing / notarization

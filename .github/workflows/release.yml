@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version from tag
+        id: ver
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$ ]]; then
+            echo "Tag must look like v1.2.3 (got $tag)"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" DSBrain/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${GITHUB_RUN_NUMBER}" DSBrain/Info.plist
+
+      - name: Test
+        run: make test
+
+      - name: Package
+        run: make release VERSION=${{ steps.ver.outputs.version }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${{ steps.ver.outputs.version }}"
+          zip="DSBrain-${version}-macos-arm64.zip"
+          gh release create "$GITHUB_REF_NAME" "$zip" \
+            --title "DSBrain ${version}" \
+            --generate-notes
