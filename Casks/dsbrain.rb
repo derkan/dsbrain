@@ -1,6 +1,6 @@
 cask "dsbrain" do
   version "1.0.0"
-  sha256 "7fbd662c29c4642f092ddd22214f2e2291c77cb09e9bf04701f98d744602b4d5"
+  sha256 "bb7d0bbbc146140d823c12dc58b7fdaeacc0fd77dead18359091179535d868f3"
 
   url "https://github.com/derkan/dsbrain/releases/download/v#{version}/DSBrain-#{version}-macos-arm64.zip"
   name "DSBrain"
