@@ -55,9 +55,18 @@ Fan monitoring, rules, and command preview:
 
 ## Prerequisites
 
-- macOS 13+ (Ventura)
-- Xcode 15+ command line tools (or full Xcode)
+- macOS 13+ (Ventura), Apple Silicon
+- Xcode 15+ command line tools (or full Xcode) — only needed to build from source
 - A built [`ds4-server`](https://github.com/antirez/ds4) binary and model GGUF on disk
+
+## Install (Homebrew)
+
+```bash
+brew tap derkan/dsbrain https://github.com/derkan/dsbrain
+brew install --cask dsbrain
+```
+
+The cask is unsigned. If Gatekeeper blocks the app: right-click → **Open**, or `xattr -cr /Applications/DSBrain.app`.
 
 ## Quick start
 
@@ -100,6 +109,8 @@ git push origin v1.0.0
 ```
 
 Local artifact only: `make release` (or `make release VERSION=1.0.0`).
+
+The release workflow also bumps [`Casks/dsbrain.rb`](Casks/dsbrain.rb) on `main` so the Homebrew tap stays in sync.
 
 The release zip is unsigned. After moving `DSBrain.app` to Applications, if Gatekeeper blocks it: right-click → **Open**, or:
 

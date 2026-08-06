@@ -208,6 +208,8 @@ DSBrain/
 ├── icon.png
 ├── AGENTS.md
 ├── README.md
+├── Casks/dsbrain.rb                # Homebrew cask (personal tap)
+├── .github/workflows/release.yml
 ├── Tests/DSBrainTests/             # unit tests for pure logic
 └── DSBrain/
     ├── AppEntry.swift
@@ -230,7 +232,10 @@ writes invoke the helper. Manual fan control can affect thermals — use at your
 - Version string lives in `DSBrain/Info.plist` (`CFBundleShortVersionString`).
 - Local zip: `make release` → `DSBrain-<ver>-macos-arm64.zip`.
 - GitHub: push tag `v*` → `.github/workflows/release.yml` runs tests,
-  stamps plist from the tag, uploads the zip, creates the release.
+  stamps plist from the tag, uploads the zip, creates the release, then
+  bumps `Casks/dsbrain.rb` (`version` + `sha256`) on `main`.
+- Homebrew (personal tap):
+  `brew tap derkan/dsbrain https://github.com/derkan/dsbrain && brew install --cask dsbrain`
 
 ## Out of scope
 
