@@ -15,7 +15,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>DSBrain opens Pi and Codex in your terminal app when you launch a project.</string>
+	<string>DSBrain opens Pi, OMP, and Codex in your terminal app when you launch a project.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSSupportsAutomaticTermination</key>

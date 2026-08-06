@@ -32,7 +32,7 @@ struct ProjectsView: View {
                 }
 
                 if projectStore.projects.isEmpty {
-                    Text("No recent projects. Click + to open a folder with Pi, Codex, or Cursor.")
+                    Text("No recent projects. Click + to open a folder with Pi, OMP, Codex, or Cursor.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
@@ -59,7 +59,7 @@ struct ProjectsView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help("Open a folder with Pi, Codex, or Cursor")
+        .help("Open a folder with Pi, OMP, Codex, or Cursor")
     }
 
     private func projectRow(_ project: ProjectEntry) -> some View {
@@ -165,7 +165,7 @@ struct ProjectsView: View {
     private func pickAgent() -> AgentKind? {
         let alert = NSAlert()
         alert.messageText = "Open with"
-        alert.informativeText = "Choose an agent for this folder. Pi and Codex use the local ds4-server."
+        alert.informativeText = "Choose an agent for this folder. Pi, OMP, and Codex use the local ds4-server."
         alert.alertStyle = .informational
         for agent in AgentKind.allCases {
             alert.addButton(withTitle: agent.displayName)

@@ -327,6 +327,21 @@ final class ProjectEntryTests: XCTestCase {
         XCTAssertEqual(decoded.lastOpenedAt.timeIntervalSince1970, 1_700_000_000, accuracy: 1)
     }
 
+    func testOMPAgentKindRoundTrip() throws {
+        let original = ProjectEntry(
+            path: "/tmp/omp-proj",
+            name: "omp-proj",
+            lastAgent: .omp,
+            lastOpenedAt: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(ProjectEntry.self, from: data)
+        XCTAssertEqual(decoded.lastAgent, .omp)
+        XCTAssertEqual(AgentKind.omp.displayName, "OMP")
+        XCTAssertTrue(AgentKind.omp.requiresServer)
+        XCTAssertFalse(AgentKind.cursor.requiresServer)
+    }
+
     func testNormalizePathAbsolute() {
         let path = ProjectStore.normalizePath("/tmp")
         XCTAssertTrue(path.hasPrefix("/"))

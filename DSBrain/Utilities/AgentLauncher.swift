@@ -28,7 +28,7 @@ enum AgentLauncher {
         }
     }
 
-    /// Launch `agent` with cwd/`path`, using ds4 host/port for Pi/Codex.
+    /// Launch `agent` with cwd/`path`, using ds4 host/port for terminal agents.
     static func launch(
         agent: AgentKind,
         path: String,
@@ -45,7 +45,7 @@ enum AgentLauncher {
         switch agent {
         case .cursor:
             try launchCursor(path: normalized)
-        case .pi, .codex:
+        case .pi, .omp, .codex:
             guard serverRunning else { throw LaunchError.serverStopped }
             let body = try scriptBody(agent: agent, path: normalized, host: host, port: port)
             // `.command` is the macOS convention for “run in Terminal when opened”.
@@ -79,6 +79,17 @@ enum AgentLauncher {
             pi --provider ds4 --model deepseek-v4-flash
             \(footer)
             """
+        case .omp:
+            // Ephemeral provider overlay so host/port match Preferences without
+            // requiring a pre-edited ~/.omp/agent/models.yml.
+            let configURL = try writeOMPConfig(host: host, port: port)
+            let qConfig = bashSingleQuote(configURL.path)
+            return """
+            #!/bin/bash
+            cd \(qPath) || exit 1
+            omp --config \(qConfig) --model ds4/deepseek-v4-flash
+            \(footer)
+            """
         case .codex:
             let base = "http://\(host):\(port)/v1"
             return """
@@ -92,6 +103,39 @@ enum AgentLauncher {
         case .cursor:
             preconditionFailure("cursor uses launchCursor")
         }
+    }
+
+    /// oh-my-pi (`omp`) custom OpenAI-compatible provider overlay.
+    private static func writeOMPConfig(host: String, port: Int) throws -> URL {
+        let base = "http://\(host):\(port)/v1"
+        let yaml = """
+            providers:
+              ds4:
+                baseUrl: \(yamlDoubleQuoted(base))
+                api: openai-completions
+                apiKey: dsv4-local
+                models:
+                  - id: deepseek-v4-flash
+                    name: DeepSeek V4 Flash
+                    contextWindow: 100000
+                    maxTokens: 32000
+            modelRoles:
+              default: ds4/deepseek-v4-flash
+            """
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DSBrain-launches", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("omp-\(UUID().uuidString).yml")
+        guard let data = yaml.data(using: .utf8) else { throw LaunchError.scriptWriteFailed }
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    private static func yamlDoubleQuoted(_ value: String) -> String {
+        let escaped = value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        return "\"\(escaped)\""
     }
 
     private static func bashSingleQuote(_ value: String) -> String {

@@ -53,12 +53,14 @@ There is no `.xcodeproj` in-tree. Open `Package.swift` or run `make xcode`.
 
 1. **Header** — app name, short version, Running/Stopped badge, Preferences.
 2. **Projects** (accordion, default expanded) — recent folders opened with
-   Pi / Codex / Cursor. Header `+` picks a directory then an agent; row click
+   Pi / OMP / Codex / Cursor. Header `+` picks a directory then an agent; row click
    reopens with the last agent; trailing icon is Open with…. Persisted in
    `~/Library/Application Support/DSBrain/projects.yaml` (separate from config).
-   Pi/Codex require ds4-server running; Cursor opens the folder in the IDE.
-   Pi/Codex open a temp `.command` script via `open -a <terminal_app>` (no Apple
-   Events). Default terminal is iTerm if installed, else Terminal — set in Preferences.
+   Pi/OMP/Codex require ds4-server running; Cursor opens the folder in the IDE.
+   Pi/OMP/Codex open a temp `.command` script via `open -a <terminal_app>` (no Apple
+   Events). OMP gets an ephemeral `--config` overlay pointing at the configured
+   `--host` / `--port` (`ds4/deepseek-v4-flash`). Default terminal is iTerm if
+   installed, else Terminal — set in Preferences.
 3. **Fans** (accordion) — fan RPM, temps, manual/rules control.
    When fan monitoring is enabled and `smc-helper` is not setuid-root,
    the collapsed header shows a short **Authorize** link (same flow as Preferences).

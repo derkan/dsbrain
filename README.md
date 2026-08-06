@@ -1,6 +1,6 @@
 # DSBrain
 
-macOS menu bar app that runs and monitors a local [ds4-server](https://github.com/antirez/ds4) (DeepSeek V4 / Flash) process — tray metrics, fan control, and one-click project launches into Pi, Codex, or Cursor.
+macOS menu bar app that runs and monitors a local [ds4-server](https://github.com/antirez/ds4) (DeepSeek V4 / Flash) process — tray metrics, fan control, and one-click project launches into Pi, [OMP](https://github.com/can1357/oh-my-pi), Codex, or Cursor.
 
 ## Screenshots
 
@@ -48,7 +48,7 @@ Fan monitoring, rules, and command preview:
 - Adopt an already-running `ds4-server` on the configured `--host` / `--port`
 - Status bar: activity badge, GPU/MEM mini-bars, P/T speeds, context (`C:`), SSD cache hit (`S:`), fan RPM / GPU temp
 - Popover: Projects, Fans, Activity, Server Log, Start / Restart / Quit
-- Projects: pin folders and open with [Pi](https://github.com/badlogic/pi-mono), Codex CLI, or Cursor against the local OpenAI-compatible endpoint
+- Projects: pin folders and open with [Pi](https://github.com/badlogic/pi-mono), [OMP](https://github.com/can1357/oh-my-pi) (`omp`), Codex CLI, or Cursor against the local OpenAI-compatible endpoint
 - Preferences for launch command, tray toggles, memory watchdog, fan rules, terminal app
 - Optional host-RAM watchdog that restarts the owned server when usage crosses a threshold
 - Daily rotated logs under `~/Library/Application Support/DSBrain/`

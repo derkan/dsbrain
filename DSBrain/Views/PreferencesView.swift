@@ -143,7 +143,7 @@ struct PreferencesView: View {
     private var projectsTerminalSection: some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Used when Projects opens Pi or Codex. Cursor always uses the Cursor app.")
+                Text("Used when Projects opens Pi, OMP, or Codex. Cursor always uses the Cursor app.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 HStack {

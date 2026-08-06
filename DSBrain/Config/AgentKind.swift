@@ -2,6 +2,7 @@ import Foundation
 
 enum AgentKind: String, Codable, CaseIterable, Equatable, Identifiable {
     case pi
+    case omp
     case codex
     case cursor
 
@@ -10,6 +11,7 @@ enum AgentKind: String, Codable, CaseIterable, Equatable, Identifiable {
     var displayName: String {
         switch self {
         case .pi: return "Pi"
+        case .omp: return "OMP"
         case .codex: return "Codex"
         case .cursor: return "Cursor"
         }
@@ -19,8 +21,17 @@ enum AgentKind: String, Codable, CaseIterable, Equatable, Identifiable {
     var systemImage: String {
         switch self {
         case .pi: return "terminal.fill"
+        case .omp: return "sparkles"
         case .codex: return "chevron.left.forwardslash.chevron.right"
         case .cursor: return "macwindow"
+        }
+    }
+
+    /// Needs a running ds4-server (OpenAI-compatible endpoint).
+    var requiresServer: Bool {
+        switch self {
+        case .pi, .omp, .codex: return true
+        case .cursor: return false
         }
     }
 }
